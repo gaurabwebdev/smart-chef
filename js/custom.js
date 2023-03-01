@@ -91,14 +91,9 @@ const loadRecipe = async (idMeal) => {
 const getRecipeData = (recipeData) => {
     console.log(recipeData);
     const {strMeal, strCategory, strArea, strInstructions, strMealThumb, strYoutube} = recipeData;
-    const elements = [];
-    for (const element of Object.keys(recipeData)){
-        if(element.startsWith('strIngredient')){
-            if(recipeData[element] != ''){
-                elements.push(recipeData[element])
-            }
-        }
-    }
+    
+    const elements = Object.keys(recipeData).filter(element => element.startsWith('strIngredient'));
+
     const dishContainer = document.getElementById('dish-container');
     dishContainer.innerHTML = `
         <div class = "container container w-100">
