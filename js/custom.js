@@ -6,7 +6,7 @@ countryDishes.forEach((dish) => {
     dishItem.classList.add('dish-item');
     dishItem.style.listStyle = 'none';
     dishItem.innerHTML = `
-        <a href="#" class="text-decoration-none fs-5">${dish}</a>
+        <a onclick="countryMeals('${dish}')" href="#" class="text-decoration-none fs-5">${dish}</a>
     `;
     dishContainer.appendChild(dishItem);
 })
@@ -16,20 +16,22 @@ const dishCategoryLoad = async () => {
     try{
         const dishCategoryData = await fetch('https://www.themealdb.com/api/json/v1/1/categories.php');
         const dishCategory = await dishCategoryData.json();
-        showDishesCategories(dishCategory.categories);
+        showDishesCategories(dishCategory.categories, true);
     } catch(err){
         return alert(err);
     }
 }
 
-const showDishesCategories = (categories) =>{
+const showDishesCategories = (categories, status) =>{
     // console.log(categories);
     const dishContainer = document.getElementById('dish-container');
+    dishContainer.innerHTML = '';
     categories.reverse().forEach((category) => {
-        const {strCategory, strCategoryThumb} = category;
         const categoryDiv = document.createElement('div');
         categoryDiv.classList.add('col');
-        categoryDiv.innerHTML = `
+        if(category.idCategory && status){
+            const {strCategory, strCategoryThumb} = category;
+            categoryDiv.innerHTML = `
             <div class="card p-3">
                 <img src="${strCategoryThumb}" class="card-img-top" alt="...">
                 <div class="card-body d-flex justify-content-evenly">
@@ -42,7 +44,23 @@ const showDishesCategories = (categories) =>{
                 </div>
             </div>
         `;
-        dishContainer.appendChild(categoryDiv)
+        }  else {
+            const {idMeal, strMeal, strMealThumb} = category;
+            categoryDiv.innerHTML = `
+            <div class="card p-3">
+                <img src="${strMealThumb}" class="card-img-top" alt="...">
+                <div class="card-body d-flex justify-content-evenly align-items-center flex-column">
+                    <h4 class="card-title">
+                        ${strMeal}
+                    </h4>
+                    <button onclick="recipeDataLoad('${idMeal}')" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                        Recipes
+                    </button>
+                </div>
+            </div>
+        `;
+        }
+        dishContainer.appendChild(categoryDiv);
     })
 }
 
@@ -59,6 +77,7 @@ const recipeDataLoad = async (strCategory) => {
 }
 
 const showCateogryModal = (recipes, strCategory) => {
+    console.log(recipes, strCategory);
     document.getElementById('recipeHeader').innerText = strCategory;
     const modalContainer = document.getElementById('modal-body');
 
@@ -71,7 +90,7 @@ const showCateogryModal = (recipes, strCategory) => {
         singleRecipeDiv.innerHTML = `
             <img style ="width: 275px; height: 225px;" src="${strMealThumb}" class ="rounded-circle">
             <h4>${strMeal}</h4>
-            <button onclick="loadRecipe(${idMeal})" class= "btn btn-primary">Check It Out</button>
+            <button onclick="loadRecipe(${idMeal})" class= "btn btn-primary" data-bs-dismiss="modal">Check It Out</button>
         `;
         modalContainer.appendChild(singleRecipeDiv);
     })
@@ -89,7 +108,7 @@ const loadRecipe = async (idMeal) => {
 }
 
 const getRecipeData = (recipeData) => {
-    console.log(recipeData);
+    // console.log(recipeData);
     const {strMeal, strCategory, strArea, strInstructions, strMealThumb, strYoutube} = recipeData;
     
     const elements = Object.keys(recipeData).filter(element => element.startsWith('strIngredient'));
@@ -118,13 +137,21 @@ const getRecipeData = (recipeData) => {
         itemsContainer.appendChild(itemList);
     })
 
-    // const modalContainer = document.getElementById('categoryModal');
-    // if(modalContainer.classList.contains('show') && modalContainer.style.display === 'block'){
-    //     modalContainer.classList.remove('show');
-    //     modalContainer.style.display === 'none';
-    //     modalContainer.removeAttribute('role');
-    //     modalContainer.removeAttribute('aria-modal');
-    //     modalContainer.setAttribute('aria-hidden', 'true');
-    // }
+    const modalContainer = document.getElementById('categoryModal');
+    modalContainer.setAttribute('data-bs-dismiss', 'modal');
 
 }
+
+const countryMeals = async(country) => {
+    const URL = `https://www.themealdb.com/api/json/v1/1/filter.php?a=${country}`;
+    console.log(URL);
+    try{
+        const loadCountryDishes = await fetch(URL);
+        const data = await loadCountryDishes.json();
+        showDishesCategories(data.meals, false)
+        console.log(data.meals)
+    } catch (err){
+        console.log(err);
+    }
+}
+
